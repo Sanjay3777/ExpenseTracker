@@ -82,6 +82,8 @@ Files to change
   — app.py — replace hardcoded data in the profile() view with calls to the
     new query helpers in database/queries.py
   — templates/profile.html — confirm ₹ symbol is used for all currency display
+  — database/db.py — expose the database path (e.g. a module-level DB_PATH) so
+    tests can point get_db() at a temporary database
 
 Files to create
   — database/queries.py — pure query helpers with no Flask imports;
@@ -90,13 +92,18 @@ Files to create
           → dict with name, email, member_since
       — get_summary_stats(user_id)
           → dict with total_spent, transaction_count, top_category
+          → total_spent rounded to 2 decimals (avoid float noise like 346.2400000001)
+          → top_category ties broken alphabetically; "—" when there are no expenses
       — get_recent_transactions(user_id, limit=10)
           → list of dicts, each with date, description, category, amount
           → ordered newest-first
+          → ties on date broken by id descending
       — get_category_breakdown(user_id)
           → list of dicts, each with name, amount, pct
           → pct is percentage of total rounded to nearest int
           → ordered by amount descending
+          → each amount rounded to 2 decimals
+  — tests/test_backend_connection.py
 
 New dependencies
   — None
@@ -107,12 +114,17 @@ Rules for implementation
   — PRAGMA foreign_keys = ON must be enabled on every connection
     (already handled in get_db())
   — Currency must always display as ₹ — never £ or $
+  — Amounts are shown with exactly two decimals (e.g. ₹0.00, ₹346.24)
   — member_since must be derived from users.created_at and formatted as
     "Month YYYY" (e.g. "January 2026")
   — pct values in category breakdown must sum to 100; use integer rounding
     and adjust the largest category to absorb any rounding remainder
-  — If a user has no expenses, all helpers must return zeros and empty lists —
+  — If a user has no expenses, the three expense helpers must return zeros and empty lists —
     never raise exceptions
+  — Every helper query must be scoped by user_id so a user never sees another
+    user's data
+  — If the session user_id has no matching user (e.g. after a database reset),
+    profile() must clear the session and redirect to /login — never a 500
   — All helpers in database/queries.py must call get_db() internally and
     close the connection before returning
   — Use CSS variables — never hardcode hex values
@@ -121,6 +133,7 @@ Rules for implementation
 
 Tests to write
   — File: tests/test_backend_connection.py
+  — Tests run against a temporary seeded database, never the dev spendly.db
   — Unit tests — format as a table with columns: Function | Input | Expected output:
       — get_user_by_id with valid user_id → dict with correct name, email, member_since
       — get_user_by_id with non-existent id → None
@@ -131,11 +144,17 @@ Tests to write
       — get_recent_transactions with user_id with expenses →
         list ordered newest-first, each item has date, description, category, amount
       — get_recent_transactions with user_id with no expenses → empty list
+      — get_recent_transactions with limit=3 and 8 expenses → exactly 3 items,
+        the 3 newest
+      — any expense helper for a user with no expenses while another user has some
+        → zeros / empty list (no data leaks between users)
       — get_category_breakdown with user_id with expenses →
         list ordered by amount desc; pct values are integers summing to 100
       — get_category_breakdown with user_id with no expenses → empty list
   — Route tests:
       — GET /profile unauthenticated → redirects to /login (302)
+      — GET /profile with a session user_id that matches no user → redirects to
+        /login (302)
       — GET /profile authenticated as seed user:
           — returns 200
           — response contains "Demo User"
@@ -159,3 +178,6 @@ Definition of done
     - All amounts on the page display the ₹ symbol
     - Registering a brand-new user and visiting /profile shows ₹0.00 total spent,
       0 transactions, and an empty category breakdown — no errors
+    - A logged-in user never sees another user's expenses
+    - If the session points at a user that no longer exists, /profile
+      redirects to /login instead of erroring

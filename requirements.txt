@@ -2,3 +2,67 @@ flask==3.1.3
 werkzeug==3.1.6
 pytest==8.3.5
 pytest-flask==1.3.0
+
+# ============================================================================
+# SPEC REVIEW REPORT: Spec_0X_*_prompt.md vs .claude/specs/0X-*.md (steps 03-09)
+# (comment lines only - pip ignores them; dependencies above are unchanged)
+# ============================================================================
+#
+# OVERALL: all seven specs follow their prompts. All required sections are
+# present, in order, with exact names, and no numbers in the headings. No
+# requirement was dropped. Deviations are small and listed below.
+#
+# Deviations common to all specs (03-09)
+#  - A title line ("# Spec NN - ...") was added above Overview. The prompts say
+#    "output only the spec", so this is a small extra.
+#  - Identifiers are wrapped in backticks (cosmetic).
+#
+# 03 login/logout  - MATCH
+#  - All 5 sections and the helper get_user_by_email() match the prompt.
+#  - All 7 Definition-of-Done items are carried over.
+#
+# 04 profile  - MATCH
+#  - Four template sections are a numbered list, as the prompt asks.
+#  - All 8 Definition-of-Done items are carried over.
+#
+# 05 backend routes for profile  - MATCH, 1 addition
+#  - tests/test_backend_connection.py was added to "Files to create". The
+#    prompt only lists it under "Tests to write".
+#  - The 4 helper signatures and return shapes match.
+#  - The unit-test table uses Function | Input | Expected output.
+#
+# 06 date filter  - MATCH, 1 prompt inconsistency
+#  - The prompt's Routes says "if EITHER param is absent or malformed, fall back
+#    to All Time". The query helpers say "when BOTH params are provided, filter".
+#    The spec follows both: a single valid bound means unfiltered.
+#    DECISION FOR YOU: should one valid bound (date_from only) filter instead?
+#
+# 07 add expense  - MATCH, 2 changes
+#  - Form action: the prompt hardcodes action="/expenses/add", but its own rule
+#    says url_for() for every internal link. The spec says the action is
+#    "generated with url_for".
+#  - tests/test_add_expense.py was added to "Files to create".
+#
+# 08 edit expense  - MATCH, 3 changes
+#  - Form action and Edit link: the prompt hardcodes the paths, but its own rule
+#    says url_for(). The spec says "generated with url_for".
+#  - The prompt's literal route decorator was replaced by "must accept both
+#    methods: GET and POST" (the prompt also says "no code").
+#  - tests/test_edit_expense.py was added to "Files to create".
+#
+# 09 delete expense  - MATCH, 4 changes
+#  - Form action: hardcoded in the prompt; the spec says "generated with
+#    url_for" (same conflict as 07 and 08).
+#  - The prompt's literal decorator was replaced by "restrict methods to POST".
+#  - The prompt contradicts itself. The Overview says the confirm() dialog is in
+#    "the button's onclick handler", but Templates puts onsubmit on the <form>.
+#    The spec uses the form's onsubmit handler in both places. Note that
+#    cancelling the dialog on onsubmit stops submission, which matches the
+#    Definition of Done.
+#  - style="display:inline" is kept as the one stated inline-style exception.
+#  - tests/test_delete_expense.py was added to "Files to create".
+#
+# Open items in the prompts (not spec defects)
+#  - 05 asks for "three parallel subagents", which describes how to build the
+#    work, not what to build. It is kept in the Overview as written.
+# ============================================================================

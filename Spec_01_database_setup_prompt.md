@@ -59,7 +59,8 @@ Include these 14 sections:
    — seed_db(): checks if users table already has rows — if yes return early;
      otherwise insert one demo user (name: Demo User, email: demo@spendly.com,
      password: demo123 hashed via werkzeug) and 8 sample expenses linked to that user,
-     covering all 7 categories, with dates spread across the current month
+     covering all 7 categories, with dates spread across the current month; the 8 amounts must total exactly 346.24
+     and Bills must have the highest single-category total (Step 05 tests depend on this)
 
 6. Changes to app.py
    — Import get_db, init_db, seed_db from database.db
@@ -103,7 +104,7 @@ Include these 14 sections:
       - Database file created on app startup
       - Both tables exist with correct schema and constraints
       - Demo user exists with hashed password
-      - 8 sample expenses exist across all 7 categories
+      - 8 sample expenses exist across all 7 categories, totalling 346.24, with Bills as the top category
       - No duplicate seed data on repeated runs
       - App starts without errors
       - Foreign key enforcement works

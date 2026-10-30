@@ -89,13 +89,16 @@ Rules for implementation
   — Hash passwords with werkzeug.security.generate_password_hash — never store plaintext
   — app.secret_key must be set in app.py for flash() to work
     (use a hardcoded dev string for now)
+  — Strip surrounding whitespace from name and email, and lowercase the email,
+    before validating or storing (the UNIQUE constraint is case-sensitive)
   — Server-side validation must check in this order:
-      1. All fields are non-empty
+      1. All fields are non-empty (after stripping)
       2. password == confirm_password
       3. Email is not already registered (catch sqlite3.IntegrityError)
   — On any validation failure: re-render the form with a flashed error — do not redirect
   — On success: flash a success message and redirect to url_for('login')
-  — Use abort(405) if an unsupported HTTP method reaches the route
+  — The route decorator must declare methods GET and POST only; Flask then
+    returns 405 automatically for any other method — no manual abort(405)
   — All templates must extend base.html
   — Use CSS variables — never hardcode hex values
   — Use url_for() for every internal link — never hardcode URLs
@@ -109,3 +112,5 @@ Definition of done
     - Submitting with any empty field re-renders with a validation error
     - Password is stored as a hash — never plaintext — verifiable by inspecting spendly.db
     - No duplicate user is created on repeated valid submissions with the same email
+    - Registering "Demo@Spendly.com" when "demo@spendly.com" exists is rejected
+      as already registered

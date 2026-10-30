@@ -56,6 +56,7 @@ Depends on
   — Step 01 — Database setup (schema must exist)
   — Step 02 — Registration (user accounts must be creatable)
   — Step 03 — Login + Logout (session must be set; /profile must be a protected route)
+    — Step 03 also provides the navbar logged-in state this page relies on
 
 Routes
   — GET /profile — render the profile page — logged-in only
@@ -77,15 +78,27 @@ Templates
          description, category badge, amount (at least 3 hardcoded rows)
       4. Category breakdown — per-category totals as a simple list or
          progress-bar rows (at least 3 hardcoded categories)
+      — Avatar initials are derived in the template from the user name, not stored
+      — Each category row shows name, amount, and percentage; any bar must use the
+        native <progress> element (value/max) because inline styles are banned
 
 Files to change
   — app.py — replace /profile stub with a real view function that:
       — redirects unauthenticated users to /login
       — passes hardcoded context variables (user dict, stats dict, expenses list,
         category breakdown list) to profile.html
+      — the dicts must use the exact keys Step 05 will return from live queries,
+        so the swap needs no template changes:
+          — user: name, email, member_since (string formatted "Month YYYY")
+          — stats: total_spent, transaction_count, top_category
+          — each expense: date, description, category, amount
+          — each category: name, amount, pct (integers summing to 100)
+      — hardcoded values must be internally consistent (stats match the list)
 
 Files to create
   — templates/profile.html
+  — static/css/profile.css — page styles, including one badge class per category,
+    using CSS variables only
 
 New dependencies
   — None
@@ -101,6 +114,9 @@ Rules for implementation
   — No inline styles anywhere in profile.html
   — All templates must extend base.html
   — Category badges must use a CSS class, not inline colour styles
+  — Display all amounts with the ₹ symbol (Indian Rupee) — never £ or $
+  — Page-specific styles live in static/css/profile.css, linked from
+    profile.html via url_for("static", filename=...)
   — Use url_for() for every internal link — never hardcode paths
 
 Definition of done
@@ -116,3 +132,6 @@ Definition of done
       categories
     - The navbar shows the logged-in state (username + logout link)
     - No hex colour values appear in profile.html — only CSS variables
+    - All amounts display the ₹ symbol
+    - Badges and bars are styled by classes in profile.css, with no inline
+      styles in profile.html
